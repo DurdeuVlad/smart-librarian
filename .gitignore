@@ -1,5 +1,28 @@
-./env
-./scripts/ol_dump_works_2024-12-19.txt
-./scripts/ol_dump_works_2024-12-19.txt.gz
-./scripts/ol_dump_works_latest.txt
-./scripts/ol_dump_works_latest.txt.gz
+# Environment files
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node.js
+app/node_modules/
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+
+# Data dumps (large files you don’t want in git)
+scripts/ol_dump_works_*.txt
+scripts/ol_dump_works_*.txt.gz
+
+# SQLite / ChromaDB
+*.sqlite3
+chromadb/
+
+# VSCode
+.vscode/
