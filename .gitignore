@@ -21,8 +21,8 @@ scripts/ol_dump_works_*.txt
 scripts/ol_dump_works_*.txt.gz
 
 # SQLite / ChromaDB
-*.sqlite3
-chromadb/
+# *.sqlite3
+# chromadb/
 
 # VSCode
 .vscode/
