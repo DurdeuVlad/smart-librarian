@@ -10,8 +10,12 @@ const app = express();
 const PORT = 3001;
 
 // Initialize clients
-const chroma = new ChromaClient({ path: "http://localhost:8000" });
-
+const chroma = new ChromaClient({
+    path: "http://localhost:8000",
+    cors: {
+        allowOrigins: ["http://localhost:3001", "http://localhost:5173"]
+    }
+});
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Cost tracking
@@ -26,18 +30,29 @@ const costs = {
 app.use(cors());
 app.use(express.json());
 
-// Book summaries for tool calling
-const bookSummaries = {
-    "Maitreyi": `Povestea de dragoste dintre Allan și Maitreyi în India colonială. Mircea Eliade explorează chestiuni filozofice și culturale prin această relație intensă. Cartea abordează diferențele dintre culturile estică și vestică, precum și căutarea spirituală a personajului principal.`,
-    "Ion": `Drama țăranului Ion care se căsătorește pentru pământ, nu pentru dragoste. Liviu Rebreanu prezintă conflictele sociale din satul românesc, obsesia pentru proprietate și consecințele tragice ale ambițiilor materialiste.`,
-    "Harry Potter și Piatra Filozofală": `Un băiat orfan descoperă că este vrăjitor și intră la școala Hogwarts. J.K. Rowling creează o lume magică plină de aventuri, prietenii și confruntarea cu răul. Prima carte din seria care a captivat generații întregi.`,
-    "1984": `Într-o societate totalitară, Winston Smith se luptă împotriva controlului absolut al Partidului. George Orwell prezintă o viziune distopică despre supraveghere, manipulare și pierderea libertății individuale.`
-};
+async function getSummaryByTitle(title) {
+    try {
+        const collection = await chroma.getCollection({ name: "openlibrary" });
+        const results = await collection.get({
+            where: { "title": { "$eq": title } },
+            limit: 1
+        });
 
-// Tool function (necesită o logică suplimentară pentru a o face utilă în noul context)
-function getSummaryByTitle(title) {
-    const summary = bookSummaries[title];
-    return summary || `Nu am găsit un rezumat pentru "${title}" în baza mea de date.`;
+        if (results.metadatas && results.metadatas.length > 0) {
+            const meta = results.metadatas[0];
+            return {
+                summary: meta.description || meta.subjects,
+                bookData: {
+                    title: meta.title,
+                    authors: meta.authors,
+                    subjects: meta.subjects
+                }
+            };
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
 }
 
 // Routes
@@ -49,14 +64,12 @@ app.post('/api/query', async (req, res) => {
     const { text, k = 3 } = req.body;
 
     try {
-        // Generate embedding
         const embedding = await openai.embeddings.create({
             model: "text-embedding-3-small",
             input: text
         });
         totalSpent += costs.embedding * (text.length / 4);
 
-        // Query ChromaDB
         const collection = await chroma.getCollection({ name: "openlibrary" });
         const results = await collection.query({
             queryEmbeddings: [embedding.data[0].embedding],
@@ -77,17 +90,15 @@ app.post('/api/query', async (req, res) => {
 });
 
 app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
+    const { message, history = [] } = req.body;
 
     try {
-        // PASUL 1: Generează embedding pentru mesajul utilizatorului
         const embeddingResponse = await openai.embeddings.create({
             model: "text-embedding-3-small",
             input: message
         });
         totalSpent += costs.embedding * (message.length / 4);
 
-        // PASUL 2: Caută în ChromaDB cele mai relevante cărți
         const collection = await chroma.getCollection({ name: "openlibrary" });
         const results = await collection.query({
             queryEmbeddings: [embeddingResponse.data[0].embedding],
@@ -99,29 +110,50 @@ app.post('/api/chat', async (req, res) => {
             return `Titlu: ${title}\nAutor: ${authors}\nSubiecte: ${subjects}\nRezumat: ${summary}`;
         });
 
-        // PASUL 3: Construiește un prompt îmbogățit cu context din baza de date
         const context = relevantDocs.join('\n\n---\n\n');
-        const systemPrompt = `Ești un bibliotecar inteligent. Răspunde la întrebarea utilizatorului DOAR pe baza informațiilor de mai jos. Dacă informațiile furnizate nu conțin răspunsul, spune că nu ai detalii despre subiect.
+        const systemPrompt = `Ești un bibliotecar inteligent. Răspunde DOAR pe baza cărților de mai jos. Pentru cărți din această listă, folosește funcția get_summary_by_title pentru detalii complete.
 
 Informații din biblioteca ta:
 ${context}
 
-Dacă în răspunsul tău te referi la una dintre cărțile din lista de mai sus, adaugă la final, după trei semne de exclamare (!!!), un array JSON valid cu acele cărți. Fiecare obiect din array trebuie să aibă cheile "title", "authors", și "subjects". Exemplu: "Salut! Îți recomand Ion. !!![{"title": "Ion", "authors": "Liviu Rebreanu"}]"`;
+Dacă utilizatorul întreabă despre cărți care NU sunt în lista de mai sus, spune că nu le ai în bibliotecă si ca nu poti sa il ajuti.
+Răspunde întotdeauna cu text, apoi folosește tool-ul pentru detalii extra.`;
 
         const completion = await openai.chat.completions.create({
             model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemPrompt },
+                ...history,
                 { role: "user", content: message }
             ],
+            tools: [
+                {
+                    type: "function",
+                    function: {
+                        name: "get_summary_by_title",
+                        description: "Obține rezumat foarte detaliat pentru o carte specifică",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                title: {
+                                    type: "string",
+                                    description: "Titlul exact al cărții"
+                                }
+                            },
+                            required: ["title"]
+                        }
+                    }
+                }
+            ],
+            tool_choice: "auto",
             max_tokens: 500
         });
 
-        const rawResponse = completion.choices[0].message.content;
-        let conversationalMessage = rawResponse;
+        const rawResponse = completion.choices[0].message.content || "";
+        let conversationalMessage = rawResponse || "";
         let searchResults = [];
 
-        if (rawResponse.includes('!!!')) {
+        if (rawResponse && rawResponse.includes('!!!')) {
             const parts = rawResponse.split('!!!');
             conversationalMessage = parts[0].trim();
             const jsonPart = parts[1].trim();
@@ -132,7 +164,20 @@ Dacă în răspunsul tău te referi la una dintre cărțile din lista de mai sus
             }
         }
 
-        // Calculează costul real
+        if (completion.choices[0].message.tool_calls) {
+            for (const toolCall of completion.choices[0].message.tool_calls) {
+                if (toolCall.function.name === "get_summary_by_title") {
+                    const { title } = JSON.parse(toolCall.function.arguments);
+                    const result = await getSummaryByTitle(title);
+
+                    if (result) {
+                        conversationalMessage += `\n\n📖 **Rezumat extins pentru "${title}":**\n${result.summary}`;
+                        searchResults.push(result.bookData);
+                    }
+                }
+            }
+        }
+
         const inputTokens = completion.usage.prompt_tokens;
         const outputTokens = completion.usage.completion_tokens;
         const chatCost = (inputTokens * costs.chat_input) + (outputTokens * costs.chat_output);

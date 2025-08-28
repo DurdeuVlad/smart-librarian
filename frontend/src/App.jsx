@@ -72,7 +72,8 @@ function SmartLibrarian() {
             const resp = await fetch(`${API_BASE}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage })
+                body: JSON.stringify({ message: userMessage,
+                    history: messages.slice(-6)})
             });
 
             const data = await resp.json();

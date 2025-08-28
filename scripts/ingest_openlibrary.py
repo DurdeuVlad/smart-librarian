@@ -121,7 +121,8 @@ def add_books():
                 "title": book["title"],
                 "authors": book["authors"],
                 "first_publish_year": book["year"],
-                "subjects": book["subjects"]
+                "subjects": book["subjects"],
+                "description": book["description"]
             }
             for book in books
         ]
