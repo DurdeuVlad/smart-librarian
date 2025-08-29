@@ -4,10 +4,10 @@ Smart Librarian este un sistem **RAG (Retrieval Augmented Generation)** care rec
 
 ## 📂 Module
 
-- [Backend](./backend/BACKEND_README.md)
+- [Backend](./backend/README.md)
 - [Worker](./backend/WORKER_README.md)
-- [Frontend](./frontend/FRONTEND_README.md)
-- [Scripts](./scripts/SCRIPTS_README.md)
+- [Frontend](./frontend/README.md)
+- [Scripts](./scripts/README.md)
 
 ## 🚀 Quickstart
 
