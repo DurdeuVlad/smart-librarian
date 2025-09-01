@@ -12,8 +12,6 @@ app.use(express.json({ limit: '1mb' }));
 const CHROMA_URL = process.env.CHROMA_URL || 'http://chromadb:8000';
 const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION || 'books';
 const chroma = new ChromaClient({ path: CHROMA_URL });
-// Ensure collection exists at startup
-let collectionPromise = chroma.getOrCreateCollection({ name: CHROMA_COLLECTION });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -31,7 +29,7 @@ app.use(express.json());
 
 async function getSummaryByTitle(title) {
     try {
-        const collection = await collectionPromise;
+        const collection = await chroma.getCollection({ name: "openlibrary" });
         const results = await collection.get({
             where: { "title": { "$eq": title } },
             limit: 1
@@ -69,7 +67,7 @@ app.post('/api/query', async (req, res) => {
         });
         totalSpent += costs.embedding * (text.length / 4);
 
-        const collection = await collectionPromise;
+        const collection = await chroma.getCollection({ name: "openlibrary" });
         const results = await collection.query({
             queryEmbeddings: [embedding.data[0].embedding],
             nResults: k
@@ -98,7 +96,7 @@ app.post('/api/chat', async (req, res) => {
         });
         totalSpent += costs.embedding * (message.length / 4);
 
-        const collection = await collectionPromise;
+        const collection = await chroma.getCollection({ name: "openlibrary" });
         const results = await collection.query({
             queryEmbeddings: [embeddingResponse.data[0].embedding],
             nResults: 3

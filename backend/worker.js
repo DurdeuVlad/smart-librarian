@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: '.env', override: true });
 
 const redis = new Redis(process.env.REDIS_URL);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

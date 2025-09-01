@@ -2,53 +2,49 @@
 version: '3.8'
 
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./.chromadb:/chroma/chroma
-    environment:
-      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=*
-
   backend:
     build: ./backend
-    ports:
-      - "3001:3001"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - REDIS_URL=redis://redis:6379
-      - CHROMA_URL=http://chromadb:8000
-    depends_on:
-      - redis
-      - chromadb
-    volumes:
-      - ./.env:/app/.env
+    ports: ["3001:3001"]
+    depends_on: [redis, chromadb]
+    env_file:
+      - .env
+    restart: unless-stopped
 
   worker:
     build: ./backend
     command: node worker.js
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    volumes:
-      - ./.env:/app/.env
+    depends_on: [redis]
+    env_file:
+      - .env
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
+    ports: ["5173:5173"]
+    depends_on: [backend]
+    env_file:
+      - ./frontend/.env
+    restart: unless-stopped
+
+  chromadb:
+    image: chromadb/chroma:latest   # ideal, pune aceeași versiune cu care a fost creat DB-ul
+    environment:
+      - CHROMA_DB_IMPL=duckdb+parquet
+      - PERSIST_DIRECTORY=/data/chroma
+      # opțional, ca să nu șteargă nimic:
+      # - ALLOW_RESET=false
+    volumes:
+      - ./.chromadb:/data/chroma
     ports:
-      - "5173:5173"
-    depends_on:
-      - backend
+      - "8000:8000"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: [redis_data:/data]
+    restart: unless-stopped
 
 volumes:
   redis_data:
+
