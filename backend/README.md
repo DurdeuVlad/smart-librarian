@@ -1,41 +1,46 @@
 # Backend (Express API)
 
-Backend-ul este responsabil de interfața HTTP dintre frontend și serviciile interne (ChromaDB, Redis, OpenAI).
+The backend is responsible for the HTTP interface between the frontend and internal services (ChromaDB, Redis, OpenAI).
 
-## ⚙️ Funcționalități
-- expune endpointuri REST pentru health, căutare semantică și chat
-- conectează la **ChromaDB** pentru retrieval semantic
-- publică joburi în **Redis** (consumate de worker)
-- limitează costurile printr-un buget configurabil
+## ⚙️ Features
 
-## 🚀 Rulare locală (fără Docker)
+- Exposes REST endpoints for health checks, semantic search, and chat
+- Connects to **ChromaDB** for semantic retrieval
+- Publishes jobs to **Redis** (consumed by worker)
+- Limits costs through a configurable budget
+
+## 🚀 Local run (without Docker)
+
 ```bash
 cd backend
 npm install
 npm run dev
 ```
 
-Backend-ul citește `.env` din rădăcina proiectului.
+The backend reads `.env` from the project root.
 
-## 🔑 Variabile de mediu
-- `OPENAI_API_KEY` – cheia ta OpenAI
-- `REDIS_URL` – conexiunea la Redis (ex: redis://localhost:6379)
-- `CHROMA_URL` – URL-ul Chroma (ex: http://localhost:8000 sau http://chromadb:8000 în Docker)
-- `OPENAI_BUDGET_LIMIT_USD` – buget maxim în USD (implicit 5)
+## 🔑 Environment variables
 
-## 🌐 Endpoint-uri
-- `GET /api/health` → status backend + buget
-- `GET /api/search?q=<termen>` → caută cărți în colecția Chroma
+- `OPENAI_API_KEY` – your OpenAI API key
+- `REDIS_URL` – Redis connection (e.g., redis://localhost:6379)
+- `CHROMA_URL` – Chroma URL (e.g., http://localhost:8000 or http://chromadb:8000 in Docker)
+- `OPENAI_BUDGET_LIMIT_USD` – maximum budget in USD (default: 5)
+
+## 🌐 Endpoints
+
+- `GET /api/health` → backend status + budget
+- `GET /api/search?q=<term>` → search books in Chroma collection
 - `POST /api/chat`
+
 ```json
 {
-  "message": "Vreau o carte despre prietenie și magie",
-  "context": "Smart Librarian - recomandări"
+  "message": "I want a book about friendship and magic",
+  "context": "Smart Librarian - recommendations"
 }
 ```
 
-## 🔗 Integrare
-- **Frontend** → trimite requesturi către `/api/chat`
-- **ChromaDB** → colecția `books` cu embeddings
-- **Redis** → coadă de joburi pentru worker
+## 🔗 Integration
 
+- **Frontend** → sends requests to `/api/chat`
+- **ChromaDB** → `books` collection with embeddings
+- **Redis** → job queue for worker
