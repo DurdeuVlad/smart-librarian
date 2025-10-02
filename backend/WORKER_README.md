@@ -1,52 +1,58 @@
 # Worker (Redis + OpenAI)
 
-Worker-ul procesează joburile plasate de backend în coada Redis și apelează OpenAI pentru a genera răspunsuri conversaționale și rezumate extinse.
+The worker processes jobs placed by the backend in the Redis queue and calls OpenAI to generate conversational responses and extended summaries.
 
-## ⚙️ Funcționalități
-- consumă joburi din Redis (tipuri: `chat`, `cover`)
-- apelează **OpenAI Chat Completions** pentru recomandări și răspunsuri
-- apelează **OpenAI Image/Completions** pentru generarea coperților/imagini (cover)
-- salvează rezultatele în Redis (`result:<jobId>`) pentru a fi preluate de backend
+## ⚙️ Features
 
-## 🚀 Rulare locală
+- Consumes jobs from Redis (types: `chat`, `cover`)
+- Calls **OpenAI Chat Completions** for recommendations and responses
+- Calls **OpenAI Image/Completions** for cover/image generation (cover)
+- Saves results in Redis (`result:<jobId>`) to be retrieved by the backend
+
+## 🚀 Local run
+
 ```bash
 cd backend
 node worker.js
 ```
 
-## 🔑 Variabile de mediu
-- `OPENAI_API_KEY` – cheia ta OpenAI
-- `REDIS_URL` – conexiune către Redis (ex: redis://localhost:6379)
-- `OPENAI_BUDGET_LIMIT_USD` – buget maxim în USD (implicit 5)
+## 🔑 Environment variables
 
-## 🔗 Integrare
-- **Backend** → publică joburi (`chat`, `cover`) în Redis
-- **Worker** → procesează și scrie rezultatul în Redis
-- **Frontend** → primește răspunsul procesat prin backend
+- `OPENAI_API_KEY` – your OpenAI API key
+- `REDIS_URL` – Redis connection (e.g., redis://localhost:6379)
+- `OPENAI_BUDGET_LIMIT_USD` – maximum budget in USD (default: 5)
 
-## 📦 Exemple de joburi
+## 🔗 Integration
+
+- **Backend** → publishes jobs (`chat`, `cover`) to Redis
+- **Worker** → processes and writes result to Redis
+- **Frontend** → receives the processed response through the backend
+
+## 📦 Job examples
+
 ### Chat job
+
 ```json
 {
   "type": "chat",
   "data": {
-    "message": "Vreau o carte despre prietenie și magie",
-    "context": "Smart Librarian - recomandări"
+    "message": "I want a book about friendship and magic",
+    "context": "Smart Librarian - recommendations"
   },
   "jobId": "uuid-random"
 }
 ```
 
 ### Cover job
+
 ```json
 {
   "type": "cover",
   "data": {
     "title": "Ion",
     "author": "Liviu Rebreanu",
-    "summary": "Drama țăranului Ion..."
+    "summary": "The drama of the peasant Ion..."
   },
   "jobId": "uuid-random"
 }
 ```
-
