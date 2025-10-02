@@ -1,47 +1,56 @@
 # Frontend (React / Vite)
 
-Interfața web pentru chat și afișarea recomandărilor.
+Web interface for chat and displaying recommendations.
 
-## ⚙️ Funcționalități
-- UI de chat pentru întrebări precum „Vreau o carte despre prietenie și magie”
-- Listă de rezultate candidate din Chroma (prin backend)
-- Afișează „budget” OpenAI (spent / remaining)
-- (Dev) suport pentru mock data în timpul dezvoltării
+## ⚙️ Features
 
-## 🚀 Rulare locală
+- Chat UI for questions like "I want a book about friendship and magic"
+- List of candidate results from Chroma (via backend)
+- Displays OpenAI "budget" (spent / remaining)
+- (Dev) support for mock data during development
+
+## 🚀 Local run
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Aplicația pornește implicit pe **http://localhost:5173**.
 
-## 🔧 Configurare API
-Backendul rulează pe **http://localhost:3001**. Dacă vrei să suprascrii:
+The application starts by default on **http://localhost:5173**.
+
+## 🔧 API Configuration
+
+The backend runs on **http://localhost:3001**. If you want to override:
+
 ```bash
-# exemplu .env.local
+# example .env.local
 VITE_API_URL=http://localhost:3001
 ```
-În cod, URL-ul backendului este citit din `import.meta.env.VITE_API_URL` (fallback la `http://localhost:3001`).
+
+In the code, the backend URL is read from `import.meta.env.VITE_API_URL` (fallback to `http://localhost:3001`).
 
 ## 🏗️ Build & Preview
+
 ```bash
 npm run build
 npm run preview
 ```
 
 ## 🐳 Docker
+
 ```bash
-# din rădăcina proiectului
+# from project root
 docker compose up -d --build frontend
 ```
 
-## 📁 Structură relevantă
-- `src/App.jsx` – logica principală de chat, afișare rezultate și buget
-- `src/BookCover.jsx` – componentă pentru imagine/copertă
-- `src/main.jsx` – bootstrap aplicație
+## 📁 Relevant structure
+
+- `src/App.jsx` – main chat logic, results display, and budget
+- `src/BookCover.jsx` – component for image/cover
+- `src/main.jsx` – application bootstrap
 
 ## ❗ Troubleshooting
-- UI nu se conectează la backend → verifică `VITE_API_URL` și că backendul rulează pe 3001
-- CORS în dev → backendul permite origini `http://localhost:5173` (vezi `server.js`)
 
+- UI doesn't connect to backend → check `VITE_API_URL` and that backend is running on 3001
+- CORS in dev → backend allows origins `http://localhost:5173` (see `server.js`)
