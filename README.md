@@ -1,8 +1,8 @@
 # Smart Librarian
 
-Smart Librarian este un sistem **RAG (Retrieval Augmented Generation)** care recomandă cărți pe baza preferințelor utilizatorului. Proiectul este alcătuit din mai multe module: **backend (Express)**, **worker (Redis + OpenAI)**, **frontend (React/Vite)** și **scripts Python (ChromaDB)**.
+Smart Librarian is a **RAG (Retrieval Augmented Generation)** system that recommends books based on user preferences. The project consists of several modules: **backend (Express)**, **worker (Redis + OpenAI)**, **frontend (React/Vite)**, and **Python scripts (ChromaDB)**.
 
-## 📂 Module
+## 📂 Modules
 
 - [Backend](./backend/README.md)
 - [Worker](./backend/WORKER_README.md)
@@ -11,13 +11,15 @@ Smart Librarian este un sistem **RAG (Retrieval Augmented Generation)** care rec
 
 ## 🚀 Quickstart
 
-### 1. Clonează proiectul
+### 1. Clone the project
+
 ```bash
 git clone <repo-url>
 cd Smart-Librarian
 ```
 
-### 2. Creează fișier `.env`
+### 2. Create `.env` file
+
 ```ini
 OPENAI_API_KEY=sk-...
 REDIS_URL=redis://redis:6379
@@ -26,35 +28,42 @@ CHROMA_COLLECTION=books
 OPENAI_BUDGET_LIMIT_USD=5
 ```
 
-### 3. Rulează cu Docker Compose
+### 3. Run with Docker Compose
+
 ```bash
 docker compose up -d --build
 ```
 
-### 4. Accesează serviciile
+### 4. Access the services
+
 - UI: [http://localhost:5173](http://localhost:5173)
 - API Backend: [http://localhost:3001](http://localhost:3001)
 - ChromaDB: [http://localhost:8000](http://localhost:8000)
 
-## 📂 Module
+## 📂 Documentation
+
 - [Backend](./backend/README.md)
 - [Worker](./backend/WORKER.md)
 - [Frontend](./frontend/README.md)
 - [Scripts](./scripts/README.md)
-- [Arhitectură](./docs/ARCHITECTURE.md)
+- [Architecture](./docs/ARCHITECTURE.md)
 - [Troubleshooting](./docs/TROUBLESHOOTING.md)
 
-## 🧪 Test rapid
-- **Health check** backend:
+## 🧪 Quick test
+
+- **Backend health check**:
+
 ```bash
 curl http://localhost:3001/api/health
 ```
-- **Smoke test** scripts:
+
+- **Smoke test scripts**:
+
 ```bash
 cd scripts
 python smoke_test.py
 ```
 
-## 📜 Licență
-Proiect educațional (laborator/assignment).
+## 📜 License
 
+Educational project (lab/assignment).
